@@ -19,13 +19,15 @@ const columnColors = [
   'bg-fuchsia-50 dark:bg-fuchsia-950/30',
 ];
 
-function CardList({ list, cards, onHide, colorIndex }) {
+function CardList({ list, cards, onHide, onHideCard, onShowAllCards, hiddenCards, colorIndex }) {
   const bgColor = columnColors[colorIndex % columnColors.length];
+  const visibleCards = cards.filter(card => !hiddenCards.has(card.id));
+  const hasHiddenCards = cards.length > visibleCards.length;
   
   return (
     <div className={`w-80 shrink-0 rounded-lg shadow-lg max-h-full transition-all duration-200 ${bgColor}`}>
       <div className="sticky top-0 z-10 p-4 border-b border-gray-200/50 dark:border-gray-700/50 rounded-t-lg backdrop-blur-sm bg-white/50 dark:bg-gray-800/50 transition-colors duration-200">
-        <div className="flex justify-between items-center">
+        <div className="flex justify-between items-center mb-2">
           <h2 className="text-lg font-semibold text-gray-900 dark:text-white">{list.name}</h2>
           <button 
             onClick={onHide}
@@ -35,10 +37,19 @@ function CardList({ list, cards, onHide, colorIndex }) {
             Hide
           </button>
         </div>
+        {hasHiddenCards && (
+          <button
+            onClick={onShowAllCards}
+            className="w-full px-3 py-1.5 text-sm bg-blue-500/10 text-blue-600 dark:text-blue-400
+              rounded-lg hover:bg-blue-500/20 transition-colors duration-200"
+          >
+            Show All Cards ({cards.length - visibleCards.length} hidden)
+          </button>
+        )}
       </div>
       <div className="p-4 pt-2 overflow-y-auto">
-        {cards.map((card) => (
-          <Card key={card.id} card={card} />
+        {visibleCards.map((card) => (
+          <Card key={card.id} card={card} onHide={() => onHideCard(card.id)} />
         ))}
       </div>
     </div>

@@ -1,10 +1,42 @@
-import { useState } from 'preact/hooks';
+import { useState, useEffect } from 'preact/hooks';
 import CardList from './components/CardList';
 
 function App() {
-  const [board, setBoard] = useState(null);
+  const [board, setBoard] = useState(() => {
+    // Initialize board from localStorage if available
+    const savedBoard = localStorage.getItem('trelloBoard');
+    return savedBoard ? JSON.parse(savedBoard) : null;
+  });
+  
   const [error, setError] = useState(null);
-  const [hiddenLists, setHiddenLists] = useState(new Set());
+  const [hiddenLists, setHiddenLists] = useState(() => {
+    // Initialize hidden lists from localStorage if available
+    const savedHiddenLists = localStorage.getItem('hiddenLists');
+    return savedHiddenLists ? new Set(JSON.parse(savedHiddenLists)) : new Set();
+  });
+
+  const [hiddenCards, setHiddenCards] = useState(() => {
+    // Initialize hidden cards from localStorage if available
+    const savedHiddenCards = localStorage.getItem('hiddenCards');
+    return savedHiddenCards ? new Set(JSON.parse(savedHiddenCards)) : new Set();
+  });
+
+  // Save board data to localStorage whenever it changes
+  useEffect(() => {
+    if (board) {
+      localStorage.setItem('trelloBoard', JSON.stringify(board));
+    }
+  }, [board]);
+
+  // Save hidden lists to localStorage whenever they change
+  useEffect(() => {
+    localStorage.setItem('hiddenLists', JSON.stringify([...hiddenLists]));
+  }, [hiddenLists]);
+
+  // Save hidden cards to localStorage whenever they change
+  useEffect(() => {
+    localStorage.setItem('hiddenCards', JSON.stringify([...hiddenCards]));
+  }, [hiddenCards]);
 
   const handleFileUpload = (event) => {
     const file = event.target.files[0];
@@ -19,7 +51,8 @@ function App() {
         const jsonData = JSON.parse(e.target.result);
         setBoard(jsonData);
         setError(null);
-        setHiddenLists(new Set());
+        setHiddenLists(new Set()); // Reset hidden lists when loading new board
+        setHiddenCards(new Set()); // Reset hidden cards when loading new board
       } catch (err) {
         setError('Error parsing JSON file.');
         setBoard(null);
@@ -40,6 +73,28 @@ function App() {
       } else {
         newHidden.add(listId);
       }
+      return newHidden;
+    });
+  };
+
+  const toggleCardVisibility = (cardId) => {
+    setHiddenCards(prev => {
+      const newHidden = new Set(prev);
+      if (newHidden.has(cardId)) {
+        newHidden.delete(cardId);
+      } else {
+        newHidden.add(cardId);
+      }
+      return newHidden;
+    });
+  };
+
+  const showAllCards = (listId) => {
+    setHiddenCards(prev => {
+      const newHidden = new Set(prev);
+      board.cards
+        .filter(card => card.idList === listId)
+        .forEach(card => newHidden.delete(card.id));
       return newHidden;
     });
   };
@@ -93,6 +148,9 @@ function App() {
                     list={list} 
                     cards={board.cards.filter(card => card.idList === list.id)}
                     onHide={() => toggleListVisibility(list.id)}
+                    onHideCard={toggleCardVisibility}
+                    onShowAllCards={() => showAllCards(list.id)}
+                    hiddenCards={hiddenCards}
                     colorIndex={index}
                   />
                 </div>

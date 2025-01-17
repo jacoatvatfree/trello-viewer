@@ -1,6 +1,6 @@
 import { useState } from 'preact/hooks';
 
-function Card({ card }) {
+function Card({ card, onHide }) {
   const [modalOpen, setModalOpen] = useState(false);
   const [copyFeedback, setCopyFeedback] = useState(false);
 
@@ -38,16 +38,29 @@ function Card({ card }) {
       >
         <div className="flex justify-between items-start">
           <div className="flex-1 pr-2 text-gray-900 dark:text-gray-100">{card.name}</div>
-          <button
-            onClick={handleCopy}
-            className={`${
-              copyFeedback ? 'bg-green-500 text-white' : 'bg-gray-100 dark:bg-gray-600 text-gray-600 dark:text-gray-300'
-            } p-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-all duration-200 
-            hover:bg-gray-200 dark:hover:bg-gray-500`}
-            title="Copy as markdown"
-          >
-            {copyFeedback ? '✓' : '📋'}
-          </button>
+          <div className="flex gap-2">
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onHide();
+              }}
+              className="p-1.5 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200
+                opacity-0 group-hover:opacity-100 transition-all duration-200"
+              title="Hide card"
+            >
+              ×
+            </button>
+            <button
+              onClick={handleCopy}
+              className={`${
+                copyFeedback ? 'bg-green-500 text-white' : 'bg-gray-100 dark:bg-gray-600 text-gray-600 dark:text-gray-300'
+              } p-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-all duration-200 
+              hover:bg-gray-200 dark:hover:bg-gray-500`}
+              title="Copy as markdown"
+            >
+              {copyFeedback ? '✓' : '📋'}
+            </button>
+          </div>
         </div>
       </div>
 
